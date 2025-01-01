@@ -80,8 +80,9 @@ fn main() {
 
     match args.command {
         Some(Commands::New { filename }) => {
-            let mut file = File::create(filename).unwrap();
+            let mut file = File::create(&filename).unwrap();
             file.write_all("fn main() {\nprintln!(\"Hello World!\");\n}".as_ref()).unwrap();
+            println!("{} {filename}", "[SODA] Successfully created".green());
         }
         None => {
             // RUN PROJECT
@@ -94,7 +95,7 @@ fn main() {
                     .stdout(stdout_config)
                     .stderr(stderr_config)
                     .status()
-                    .expect(&"[SODA] Failed to update Rust".red());
+                    .expect(&format!("{} {}", "[SODA] Failed to compile".red(), args.filename));
                 if !status.success() {
                     eprintln!("{} {}{}{}", "[SODA] Failed to compile".red(), args.filename,".\nExit code: ".red(), status);
                     std::process::exit(1);
@@ -104,7 +105,7 @@ fn main() {
                     .stdout(Stdio::inherit())
                     .stderr(Stdio::inherit())
                     .status()
-                    .expect(&"[SODA] Failed to update Rust".red());
+                    .expect(&"[SODA] Failed to execute program".red());
             }
         }
     }
