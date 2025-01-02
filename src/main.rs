@@ -19,13 +19,13 @@ struct Args {
     #[arg(default_value_t = String::from("project"), help = "Filename to execute. Leave empty when running a project (not recommended).")]
     filename: String,
 
-    #[arg(short, long, default_value_t = 0, value_parser=clap::value_parser!(u8).range(0..=2), help = "Set optimization level:\n- 0 is not optimized, by default\n- 1 is lightly optimized\n- 2 is heavily optimized")]
+    #[arg(short, long, default_value_t = 0, value_parser=clap::value_parser!(u8).range(0..=2), help = "Set optimization level:\n- 0 is not optimized, by default\n- 1 is lightly optimized\n- 2 is heavily optimized\nNot supported with projects.")]
     optimized: u8,
 
     #[arg(
         long,
         default_value_t = false,
-        help = "Include debug info in the program"
+        help = "Include debug info in the program. Not supported with projects."
     )]
     debug: bool,
 
@@ -110,6 +110,39 @@ fn main() {
         None => {
             // RUN PROJECT
             if args.filename == "project" {
+                let mut cmd = Command::new("cargo");
+                cmd.arg("run")
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit());
+
+                let mut dynamic_args:Vec<String> = Vec::new();
+                if !args.verbose {
+                    dynamic_args.push("-q".parse().unwrap())
+                }
+                if args.debug {
+                    dynamic_args.push("--profile".parse().unwrap());
+                    dynamic_args.push("debug".parse().unwrap());
+                } else if args.optimized > 0 {
+                    dynamic_args.push("--profile".parse().unwrap());
+                    dynamic_args.push("release".parse().unwrap());
+                }
+                cmd.args(dynamic_args);
+
+                let status = cmd.status().expect(&format!(
+                    "{} {}",
+                    "[SODA] Failed to compile".red(),
+                    args.filename
+                ));
+                if !status.success() {
+                    eprintln!(
+                        "{} {}{}{}",
+                        "[SODA] Failed to compile".red(),
+                        args.filename,
+                        ".\nExit code: ".red(),
+                        status
+                    );
+                    std::process::exit(1);
+                }
             } else {
                 std_cfg!(args, stdout_config, stderr_config);
                 let mut cmd = Command::new("rustc");
