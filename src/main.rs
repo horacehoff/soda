@@ -3,7 +3,6 @@ use clap::{Parser, Subcommand};
 use colored::Colorize;
 use std::fs::File;
 use std::io::Write;
-use std::ops::RangeInclusive;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
