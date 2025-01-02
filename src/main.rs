@@ -16,10 +16,10 @@ struct Args {
     #[command(subcommand)]
     command: Option<Commands>,
 
-    #[arg(default_value_t = String::from("project"), help = "Filename to execute. Leave empty when running a project (not recommended).")]
+    #[arg(default_value_t = String::from("project"), help = "Filename to execute. Leave empty when running a cargo project.")]
     filename: String,
 
-    #[arg(short, long, default_value_t = 0, value_parser=clap::value_parser!(u8).range(0..=2), help = "Set optimization level:\n- 0 is not optimized, by default\n- 1 is lightly optimized\n- 2 is heavily optimized\nNot supported with projects.")]
+    #[arg(short, long, default_value_t = 0, value_parser=clap::value_parser!(u8).range(0..=2), help = "Set optimization level:\n- 0 is not optimized, by default\n- 1 is lightly optimized\n- 2 is heavily optimized\nOn projects, 1 and 2 are the same.")]
     optimized: u8,
 
     #[arg(
@@ -50,6 +50,7 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
+    #[command(subcommand_help_heading = "Creates a new file with the specified filename (default: new.rs).")]
     New {
         #[arg(default_value = "new.rs", help = "Filename for the new file")]
         filename: String,
