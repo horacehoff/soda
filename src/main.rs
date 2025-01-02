@@ -7,11 +7,9 @@ use std::ops::RangeInclusive;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-const OPTIM_RANGE: RangeInclusive<usize> = 0..=2;
-
 #[derive(Parser, Debug)]
 #[command(name = "Soda")]
-#[command(version = "B1")]
+#[command(version = "1.0.0")]
 #[command(about = None)]
 #[command(long_about = "A utility that makes Rust feel like an interpreted language.")]
 struct Args {
