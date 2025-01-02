@@ -1,5 +1,5 @@
 # Soda
-> A utility that makes Rust feel like an interpreted language
+> A small utility that makes Rust feel like an interpreted language
 
 Soda allows you to use Rust like an interpreted language, e.g. for quick prototyping.
  - To create a new file run `soda new`.
