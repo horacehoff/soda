@@ -38,34 +38,34 @@ struct Args {
 
     #[arg(short, long, default_value_t = false)]
     verbose: bool,
-
-    #[arg(
-        long,
-        default_value_t = false,
-        help = "Remove all executables from the .soda folder."
-    )]
-    clean: bool,
 }
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    #[command(subcommand_help_heading = "Creates a new file with the specified filename (default: new.rs).")]
+    #[command(subcommand_help_heading = "Create a new file with the specified filename (default: new.rs).")]
     New {
         #[arg(default_value = "new.rs", help = "Filename for the new file")]
         filename: String,
     },
+    #[command(name="rust-update", subcommand_help_heading = "Update Rust and its components.")]
+    RustUpdate {
+        #[arg(short, long, default_value_t = false)]
+        verbose: bool
+    },
+    #[command(name="clean", subcommand_help_heading = "Delete the cache (.soda) folder.")]
+    Clean
 }
 
 macro_rules! std_cfg {
-    ($args:expr, $stdout_config:ident, $stderr_config:ident) => {
-        let $stdout_config = if $args.verbose {
+    ($verbose:expr, $stdout_config:ident, $stderr_config:ident) => {
+        let $stdout_config = if $verbose {
             // Output in real-time
             Stdio::inherit()
         } else {
             // No output
             Stdio::null()
         };
-        let $stderr_config = if $args.verbose {
+        let $stderr_config = if $verbose {
             // Output in real-time
             Stdio::inherit()
         } else {
@@ -77,28 +77,28 @@ macro_rules! std_cfg {
 
 fn main() {
     let args = Args::parse();
-    if args.rust_update {
-        std_cfg!(args, stdout_config, stderr_config);
-        let status = Command::new("rustup")
-            .arg("update")
-            .stdout(stdout_config)
-            .stderr(stderr_config)
-            .status()
-            .expect(&"[SODA] Failed to update Rust".red());
-        if status.success() {
-            println!("{}", "[SODA] Rust updated successfully!".green());
-        } else {
-            eprintln!(
-                "{} {}",
-                "[SODA] Rust update failed with exit code: {}".red(),
-                status
-            );
-        }
-    }
-    if args.clean {
-        fs::remove_dir_all("./.soda").expect(&"[SODA] Failed to remove .soda folder".red());
-        println!("{}", "[SODA] Removed .soda folder successfully".green());
-    }
+    // if args.rust_update {
+    //     std_cfg!(args, stdout_config, stderr_config);
+    //     let status = Command::new("rustup")
+    //         .arg("update")
+    //         .stdout(stdout_config)
+    //         .stderr(stderr_config)
+    //         .status()
+    //         .expect(&"[SODA] Failed to update Rust".red());
+    //     if status.success() {
+    //         println!("{}", "[SODA] Rust updated successfully!".green());
+    //     } else {
+    //         eprintln!(
+    //             "{} {}",
+    //             "[SODA] Rust update failed with exit code: {}".red(),
+    //             status
+    //         );
+    //     }
+    // }
+    // if args.clean {
+    //     fs::remove_dir_all("./.soda").expect(&"[SODA] Failed to remove .soda folder".red());
+    //     println!("{}", "[SODA] Removed .soda folder successfully".green());
+    // }
 
     match args.command {
         Some(Commands::New { filename }) => {
@@ -106,6 +106,28 @@ fn main() {
             file.write_all("fn main() {\nprintln!(\"Hello World!\");\n}".as_ref())
                 .unwrap();
             println!("{} {filename}", "[SODA] Successfully created".green());
+        }
+        Some(Commands::RustUpdate {verbose}) => {
+            std_cfg!(verbose, stdout_config, stderr_config);
+            let status = Command::new("rustup")
+                .arg("update")
+                .stdout(stdout_config)
+                .stderr(stderr_config)
+                .status()
+                .expect(&"[SODA] Failed to update Rust".red());
+            if status.success() {
+                println!("{}", "[SODA] Rust updated successfully!".green());
+            } else {
+                eprintln!(
+                    "{} {}",
+                    "[SODA] Rust update failed with exit code: {}".red(),
+                    status
+                );
+            }
+        }
+        Some(Commands::Clean) => {
+            fs::remove_dir_all("./.soda").expect(&"[SODA] Failed to remove .soda folder".red());
+            println!("{}", "[SODA] Removed .soda folder successfully".green());
         }
         None => {
             // RUN PROJECT
@@ -144,7 +166,7 @@ fn main() {
                     std::process::exit(1);
                 }
             } else {
-                std_cfg!(args, stdout_config, stderr_config);
+                std_cfg!(args.verbose, stdout_config, stderr_config);
                 let mut cmd = Command::new("rustc");
                 cmd.arg(args.filename.to_string())
                     .arg("--out-dir")

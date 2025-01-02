@@ -1,4 +1,32 @@
 # Soda
 > A utility that makes Rust feel like an interpreted language
 
-TODO
+Soda allows you to use Rust like an interpreted language, e.g. for quick prototyping.\
+For example, to create a new file simply run `soda new`.
+Next, to run it, run `soda myfile.rs`. It compiles it using rustc using the specified flags and immediately runs it, providing a seamless experience. Executables are stored in a local .soda folder. You can run `soda --clean`
+
+```
+Soda
+Usage: soda [OPTIONS] [FILENAME] [COMMAND]
+
+Commands:
+  new   Creates a new file with the specified filename (default: new.rs).
+  help  Print this message or the help of the given subcommand(s)
+
+Arguments:
+  [FILENAME]  Filename to execute. Leave empty when running a cargo project. [default: project]
+
+Options:
+  -o, --optimized <OPTIMIZED>  Set optimization level:
+                               - 0 is not optimized, by default
+                               - 1 is lightly optimized
+                               - 2 is heavily optimized
+                               On projects, 1 and 2 are the same. [default: 0]
+      --debug                  Include debug info in the program. Not supported with projects.
+      --rust-update            Update Rust and its components
+  -v, --verbose                
+      --clean                  Remove all executables from the .soda folder.
+  -h, --help                   Print help (see more with '--help')
+  -V, --version                Print version
+
+```
