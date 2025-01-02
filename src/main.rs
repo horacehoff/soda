@@ -1,3 +1,4 @@
+use std::fs;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use std::fs::File;
@@ -40,6 +41,13 @@ struct Args {
 
     #[arg(short, long, default_value_t = false)]
     verbose: bool,
+
+    #[arg(
+        long,
+        default_value_t = false,
+        help = "Remove all executables from the .soda folder."
+    )]
+    clean: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -71,7 +79,6 @@ macro_rules! std_cfg {
 
 fn main() {
     let args = Args::parse();
-    println!("[LOG] PARSED:\n{args:?}");
     if args.rust_update {
         std_cfg!(args, stdout_config, stderr_config);
         let status = Command::new("rustup")
@@ -90,6 +97,10 @@ fn main() {
             );
         }
     }
+    if args.clean {
+        fs::remove_dir_all("./.soda").expect(&"[SODA] Failed to remove .soda folder".red());
+        println!("{}", "[SODA] Removed .soda folder successfully".green());
+    }
 
     match args.command {
         Some(Commands::New { filename }) => {
@@ -105,6 +116,8 @@ fn main() {
                 std_cfg!(args, stdout_config, stderr_config);
                 let mut cmd = Command::new("rustc");
                 cmd.arg(args.filename.to_string())
+                    .arg("--out-dir")
+                    .arg("./.soda")
                     .stdout(stdout_config)
                     .stderr(stderr_config);
 
@@ -135,7 +148,7 @@ fn main() {
                     );
                     std::process::exit(1);
                 }
-                let output_name = "./".to_owned()
+                let output_name = "./.soda/".to_owned()
                     + Path::new(&args.filename)
                         .file_stem()
                         .unwrap()
