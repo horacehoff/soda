@@ -10,8 +10,10 @@ Soda
 Usage: soda [OPTIONS] [FILENAME] [COMMAND]
 
 Commands:
-  new   Creates a new file with the specified filename (default: new.rs).
-  help  Print this message or the help of the given subcommand(s)
+  new          Create a new file with the specified filename (default: new.rs).
+  rust-update  Update Rust and its components.
+  clean        Delete the cache (.soda) folder.
+  help         Print this message or the help of the given subcommand(s)
 
 Arguments:
   [FILENAME]  Filename to execute. Leave empty when running a cargo project. [default: project]
@@ -23,10 +25,7 @@ Options:
                                - 2 is heavily optimized
                                On projects, 1 and 2 are the same. [default: 0]
       --debug                  Include debug info in the program. Not supported with projects.
-      --rust-update            Update Rust and its components
   -v, --verbose                
-      --clean                  Remove all executables from the .soda folder.
   -h, --help                   Print help (see more with '--help')
   -V, --version                Print version
-
 ```

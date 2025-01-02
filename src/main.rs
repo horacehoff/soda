@@ -1,6 +1,6 @@
-use std::fs;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -18,7 +18,7 @@ struct Args {
     #[arg(default_value_t = String::from("project"), help = "Filename to execute. Leave empty when running a cargo project.")]
     filename: String,
 
-    #[arg(short, long, default_value_t = 0, value_parser=clap::value_parser!(u8).range(0..=2), help = "Set optimization level:\n- 0 is not optimized, by default\n- 1 is lightly optimized\n- 2 is heavily optimized\nOn projects, 1 and 2 are the same.")]
+    #[arg(short, long, default_value_t = 0, value_parser=clap::value_parser!(u8).range(0..=2), help = "Set optimization level:\n- 0 is not optimized, by default\n- 1 is lightly optimized\n- 2 is heavily optimized\nOn cargo projects, 1 and 2 are the same.")]
     optimized: u8,
 
     #[arg(
@@ -28,32 +28,32 @@ struct Args {
     )]
     debug: bool,
 
-    #[arg(
-        long,
-        name = "rust-update",
-        default_value_t = false,
-        help = "Update Rust and its components"
-    )]
-    rust_update: bool,
-
     #[arg(short, long, default_value_t = false)]
     verbose: bool,
 }
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    #[command(subcommand_help_heading = "Create a new file with the specified filename (default: new.rs).")]
+    #[command(
+        subcommand_help_heading = "Create a new file with the specified filename (default: new.rs)."
+    )]
     New {
         #[arg(default_value = "new.rs", help = "Filename for the new file")]
         filename: String,
     },
-    #[command(name="rust-update", subcommand_help_heading = "Update Rust and its components.")]
+    #[command(
+        name = "rust-update",
+        subcommand_help_heading = "Update Rust and its components."
+    )]
     RustUpdate {
         #[arg(short, long, default_value_t = false)]
-        verbose: bool
+        verbose: bool,
     },
-    #[command(name="clean", subcommand_help_heading = "Delete the cache (.soda) folder.")]
-    Clean
+    #[command(
+        name = "clean",
+        subcommand_help_heading = "Delete the cache (.soda) folder."
+    )]
+    Clean,
 }
 
 macro_rules! std_cfg {
@@ -77,29 +77,6 @@ macro_rules! std_cfg {
 
 fn main() {
     let args = Args::parse();
-    // if args.rust_update {
-    //     std_cfg!(args, stdout_config, stderr_config);
-    //     let status = Command::new("rustup")
-    //         .arg("update")
-    //         .stdout(stdout_config)
-    //         .stderr(stderr_config)
-    //         .status()
-    //         .expect(&"[SODA] Failed to update Rust".red());
-    //     if status.success() {
-    //         println!("{}", "[SODA] Rust updated successfully!".green());
-    //     } else {
-    //         eprintln!(
-    //             "{} {}",
-    //             "[SODA] Rust update failed with exit code: {}".red(),
-    //             status
-    //         );
-    //     }
-    // }
-    // if args.clean {
-    //     fs::remove_dir_all("./.soda").expect(&"[SODA] Failed to remove .soda folder".red());
-    //     println!("{}", "[SODA] Removed .soda folder successfully".green());
-    // }
-
     match args.command {
         Some(Commands::New { filename }) => {
             let mut file = File::create(&filename).unwrap();
@@ -107,7 +84,7 @@ fn main() {
                 .unwrap();
             println!("{} {filename}", "[SODA] Successfully created".green());
         }
-        Some(Commands::RustUpdate {verbose}) => {
+        Some(Commands::RustUpdate { verbose }) => {
             std_cfg!(verbose, stdout_config, stderr_config);
             let status = Command::new("rustup")
                 .arg("update")
@@ -137,7 +114,7 @@ fn main() {
                     .stdout(Stdio::inherit())
                     .stderr(Stdio::inherit());
 
-                let mut dynamic_args:Vec<String> = Vec::new();
+                let mut dynamic_args: Vec<String> = Vec::new();
                 if !args.verbose {
                     dynamic_args.push("-q".parse().unwrap())
                 }
@@ -167,6 +144,7 @@ fn main() {
                 }
             } else {
                 std_cfg!(args.verbose, stdout_config, stderr_config);
+                // compile using rustc to .soda folder
                 let mut cmd = Command::new("rustc");
                 cmd.arg(args.filename.to_string())
                     .arg("--out-dir")
@@ -174,7 +152,7 @@ fn main() {
                     .stdout(stdout_config)
                     .stderr(stderr_config);
 
-                let mut dynamic_args:Vec<String> = Vec::new();
+                let mut dynamic_args: Vec<String> = Vec::new();
                 if args.debug {
                     dynamic_args.push("-Cdebuginfo=2".parse().unwrap())
                 }
