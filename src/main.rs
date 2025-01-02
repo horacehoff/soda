@@ -1,10 +1,10 @@
+use clap::{Parser, Subcommand};
+use colored::Colorize;
 use std::fs::File;
 use std::io::Write;
 use std::ops::RangeInclusive;
 use std::path::Path;
 use std::process::{Command, Stdio};
-use clap::{Parser, Subcommand};
-use colored::Colorize;
 
 const OPTIM_RANGE: RangeInclusive<usize> = 0..=2;
 
@@ -20,13 +20,22 @@ struct Args {
     #[arg(default_value_t = String::from("project"), help = "Filename to execute. Leave empty when running a project (not recommended).")]
     filename: String,
 
-    #[arg(short, long, default_value_t = 0, value_parser=clap::value_parser!(u8).range(0..2), help = "Set optimization level:\n- 0 is not optimized, by default\n- 1 is lightly optimized\n- 2 is heavily optimized")]
+    #[arg(short, long, default_value_t = 0, value_parser=clap::value_parser!(u8).range(0..=2), help = "Set optimization level:\n- 0 is not optimized, by default\n- 1 is lightly optimized\n- 2 is heavily optimized")]
     optimized: u8,
 
-    #[arg(long, default_value_t = false, help = "Include debug info in the program")]
+    #[arg(
+        long,
+        default_value_t = false,
+        help = "Include debug info in the program"
+    )]
     debug: bool,
 
-    #[arg(long, name="rust-update", default_value_t = false, help = "Update Rust and its components")]
+    #[arg(
+        long,
+        name = "rust-update",
+        default_value_t = false,
+        help = "Update Rust and its components"
+    )]
     rust_update: bool,
 
     #[arg(short, long, default_value_t = false)]
@@ -74,33 +83,65 @@ fn main() {
         if status.success() {
             println!("{}", "[SODA] Rust updated successfully!".green());
         } else {
-            eprintln!("{} {}", "[SODA] Rust update failed with exit code: {}".red(), status);
+            eprintln!(
+                "{} {}",
+                "[SODA] Rust update failed with exit code: {}".red(),
+                status
+            );
         }
     }
 
     match args.command {
         Some(Commands::New { filename }) => {
             let mut file = File::create(&filename).unwrap();
-            file.write_all("fn main() {\nprintln!(\"Hello World!\");\n}".as_ref()).unwrap();
+            file.write_all("fn main() {\nprintln!(\"Hello World!\");\n}".as_ref())
+                .unwrap();
             println!("{} {filename}", "[SODA] Successfully created".green());
         }
         None => {
             // RUN PROJECT
             if args.filename == "project" {
-
             } else {
                 std_cfg!(args, stdout_config, stderr_config);
-                let status = Command::new("rustc")
-                    .arg(args.filename.to_string())
+                let mut cmd = Command::new("rustc");
+                cmd.arg(args.filename.to_string())
                     .stdout(stdout_config)
-                    .stderr(stderr_config)
-                    .status()
-                    .expect(&format!("{} {}", "[SODA] Failed to compile".red(), args.filename));
+                    .stderr(stderr_config);
+
+                let mut dynamic_args:Vec<String> = Vec::new();
+                if args.debug {
+                    dynamic_args.push("-Cdebuginfo=2".parse().unwrap())
+                }
+                if args.optimized == 1 {
+                    dynamic_args.push("-Copt-level=1".parse().unwrap())
+                } else if args.optimized == 2 {
+                    dynamic_args.push("-Copt-level=3".parse().unwrap());
+                    dynamic_args.push("-Clto".parse().unwrap())
+                }
+                cmd.args(dynamic_args);
+
+                let status = cmd.status().expect(&format!(
+                    "{} {}",
+                    "[SODA] Failed to compile".red(),
+                    args.filename
+                ));
                 if !status.success() {
-                    eprintln!("{} {}{}{}", "[SODA] Failed to compile".red(), args.filename,".\nExit code: ".red(), status);
+                    eprintln!(
+                        "{} {}{}{}",
+                        "[SODA] Failed to compile".red(),
+                        args.filename,
+                        ".\nExit code: ".red(),
+                        status
+                    );
                     std::process::exit(1);
                 }
-                let output_name = "./".to_owned() +Path::new(&args.filename).file_stem().unwrap().to_str().unwrap() + std::env::consts::EXE_EXTENSION;
+                let output_name = "./".to_owned()
+                    + Path::new(&args.filename)
+                        .file_stem()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                    + std::env::consts::EXE_EXTENSION;
                 Command::new(output_name)
                     .stdout(Stdio::inherit())
                     .stderr(Stdio::inherit())
